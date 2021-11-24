@@ -1,232 +1,78 @@
 # sequelize-typescript-migration
 
-It is based on [sequelize-typescript](https://www.npmjs.com/package/sequelize-typescript), not supports "sequelize" based model codes.
-and you need prior knowledge of migration of Sequelize.
-
-[Sequelize Migration Manual](https://sequelize.org/master/manual/migrations.html)
-
-This scans models and its decorators to find changes, and generates migration code with this changes so don't need to write up, down function manually. this is like "makemigration" in django framework.
-
-After generate successfully, you can use "migrate" in [Sequelize](https://sequelize.org/)
-[Sequelize Migration Manual](https://sequelize.org/master/manual/migrations.html)
+This package is based on [sequelize-typescript](https://www.npmjs.com/package/sequelize-typescript), the TypeScript implementation package for Sequelize-based models. Originally this package was created by [kimjbstar](https://github.com/kimjbstar), but I decided to decouple its dependency to `sequelize-typescript` -- to prevent compile errors in my project, when this module was created.
 
 **This refers to [GitHub - flexxnn/sequelize-auto-migrations: Migration generator && runner for sequelize](https://github.com/flexxnn/sequelize-auto-migrations) and its forks, and modified to typescript.**
 
-Sometimes, undo(down) action may not work, then you should modify manually. Maybe it's because of ordering of relations of models.
-That issue is currently in the works.
+`sequelize-typescript-migration` is based on [flexxnn's sequelize-auto-migrations](https://github.com/flexxnn/sequelize-auto-migrations) package (and its forks), but it's reworked to TypeScript.
+
+## Prerequisites
+
+To make the full use of this module, be sure that you have:
+- [Sequelize ORM](https://www.npmjs.com/package/sequelize) installed in your project, and
+- Basic knowledge of [how Sequelize migration works](https://sequelize.org/master/manual/migrations.html)
+
+## How this works
+
+This module scans models and its decorators to find changes, and then generates the migration code on-the-fly -- much like how `makemigration` works in Django framework. This way, you don't need to create migrations manually.
+
+After the migration is generated, you can use `sequelize db:migrate` command -- just you would migrate as usual.
 
 ## Installation
 
-```
+Install with NPM:
+
+```sh
 npm i -D sequelize-typescript-migration
 ```
 
-## Usage Example
+Or, with Yarn:
 
-```typescript
+```sh
+yarn add -D sequelize-typescript-migration
+```
+
+## Usage
+
+Create a new TypeScript file, and use this template:
+
+```ts
 import { Sequelize } from "sequelize-typescript";
 import { SequelizeTypescriptMigration } from "sequelize-typescript-migration";
 
 const sequelize: Sequelize = new Sequelize({
-	// .. options
+  // Sequelize options here
 });
 
 await SequelizeTypescriptMigration.makeMigration(sequelize, {
-	outDir: path.join(__dirname, "../migrations"),
-	migrationName: "add-awesome-field-in-my-table"
-	preview: false,
+  outDir: path.join(__dirname, "../migrations"),
+  migrationName: "add-awesome-field-in-my-table"
+  preview: false,
 });
 ```
 
-let's see example, if you have this two models and run first makeMigration, it detects all table change from nothing.
+Then, compile with `tsc` command, along with the file name. The code above will generate Sequelize migrations into the migration path specified in `outDir` option. After the migration files are generated successfully, you can run the `sequelize db:migrate` command -- with the specified output, of course.
 
-```typescript
-@Table
-export class CarBrand extends Model<CarBrand> {
-  @Column
-  name: string;
+### Options
 
-  @Default(true)
-  @Column(DataType.BOOLEAN)
-  isCertified: boolean;
+Required:
+- `outDir` (string) - Output path for generated migration files
 
-  @Column
-  imgUrl: string;
+Optional:
+- `migrationName` (string) - Name for generated migration files
+- `preview` (boolean) - Similar to dry-run operation -- no files are generated if this is set to `true`
+- `debug` (boolean) - Debugs when compiling is running when this is set to `true`
+- `comment` (string) - A migration comment
 
-  @Column
-  orderNo: number;
+## Example
 
-  @Column
-  carsCount: number;
-}
-```
+See the [complete code](https://github.com/easterneas/sequelize-typescript-migration/tree/master/example).
 
-```typescript
-@Table
-export class Car extends Model<Car> {
-  @Column
-  name: string;
+## Issues
 
-  @ForeignKey(() => CarBrand)
-  @Column
-  carBrandId: number;
-
-  @BelongsTo(() => CarBrand)
-  carBrand: CarBrand;
-}
-```
-
-then this code written to 00000001-noname.js in migrations path.
-
-```javascript
-"use strict";
-
-var Sequelize = require("sequelize");
-
-/**
- * Actions summary:
- *
- * createTable "CarBrands", deps: []
- * createTable "Cars", deps: [CarBrands]
- *
- **/
-
-var info = {
-  revision: 1,
-  name: "noname",
-  created: "2020-04-12T15:49:58.814Z",
-  comment: "",
-};
-
-var migrationCommands = [
-  {
-    fn: "createTable",
-    params: [
-      "CarBrands",
-      {
-        id: {
-          autoIncrement: true,
-          primaryKey: true,
-          allowNull: false,
-          type: Sequelize.INTEGER,
-        },
-        name: {
-          type: Sequelize.STRING,
-        },
-        isCertified: {
-          type: Sequelize.BOOLEAN,
-        },
-        imgUrl: {
-          type: Sequelize.STRING,
-        },
-        orderNo: {
-          type: Sequelize.INTEGER,
-        },
-        carsCount: {
-          type: Sequelize.INTEGER,
-        },
-        createdAt: {
-          allowNull: false,
-          type: Sequelize.DATE,
-        },
-        updatedAt: {
-          allowNull: false,
-          type: Sequelize.DATE,
-        },
-      },
-      {},
-    ],
-  },
-
-  {
-    fn: "createTable",
-    params: [
-      "Cars",
-      {
-        id: {
-          autoIncrement: true,
-          primaryKey: true,
-          allowNull: false,
-          type: Sequelize.INTEGER,
-        },
-        name: {
-          type: Sequelize.STRING,
-        },
-        carBrandId: {
-          onDelete: "NO ACTION",
-          onUpdate: "CASCADE",
-          references: {
-            model: "CarBrands",
-            key: "id",
-          },
-          allowNull: true,
-          type: Sequelize.INTEGER,
-        },
-        createdAt: {
-          allowNull: false,
-          type: Sequelize.DATE,
-        },
-        updatedAt: {
-          allowNull: false,
-          type: Sequelize.DATE,
-        },
-      },
-      {},
-    ],
-  },
-];
-
-var rollbackCommands = [
-  {
-    fn: "dropTable",
-    params: ["Cars"],
-  },
-  {
-    fn: "dropTable",
-    params: ["CarBrands"],
-  },
-];
-
-module.exports = {
-  pos: 0,
-  up: function (queryInterface, Sequelize) {
-    var index = this.pos;
-    return new Promise(function (resolve, reject) {
-      function next() {
-        if (index < migrationCommands.length) {
-          let command = migrationCommands[index];
-          console.log("[#" + index + "] execute: " + command.fn);
-          index++;
-          queryInterface[command.fn]
-            .apply(queryInterface, command.params)
-            .then(next, reject);
-        } else resolve();
-      }
-      next();
-    });
-  },
-  down: function (queryInterface, Sequelize) {
-    var index = this.pos;
-    return new Promise(function (resolve, reject) {
-      function next() {
-        if (index < rollbackCommands.length) {
-          let command = rollbackCommands[index];
-          console.log("[#" + index + "] execute: " + command.fn);
-          index++;
-          queryInterface[command.fn]
-            .apply(queryInterface, command.params)
-            .then(next, reject);
-        } else resolve();
-      }
-      next();
-    });
-  },
-  info: info,
-};
-```
-
-then you can apply this `npx sequelize db:migrate --to 00000001-noname.js`
+There are known issue(s):
+- Sometimes, the undo (`down`) action may not work, and you should modify the tables manually. Maybe it's because of ordering of relations of models. I'll try to find the cause, and will create a fix later on.
 
 ## Documentation
 
-not ready yet.
+Coming soon!
