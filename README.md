@@ -2,8 +2,6 @@
 
 This package is based on [sequelize-typescript](https://www.npmjs.com/package/sequelize-typescript), the TypeScript implementation package for Sequelize-based models. Originally this package was created by [kimjbstar](https://github.com/kimjbstar), but I decided to decouple its dependency to `sequelize-typescript` -- to prevent compile errors in my project, when this module was created.
 
-**This refers to [GitHub - flexxnn/sequelize-auto-migrations: Migration generator && runner for sequelize](https://github.com/flexxnn/sequelize-auto-migrations) and its forks, and modified to typescript.**
-
 `sequelize-typescript-migration` is based on [flexxnn's sequelize-auto-migrations](https://github.com/flexxnn/sequelize-auto-migrations) package (and its forks), but it's reworked to TypeScript.
 
 ## Prerequisites
